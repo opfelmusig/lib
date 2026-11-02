@@ -1,5 +1,6 @@
 import { isNoRelatedResourcesError } from "@/core/error";
 import type { HttpClient } from "@/core/http";
+import { getNextOffset } from "@/helpers/pagination";
 import { RequestQueryBuilder } from "@/helpers/requestQuery";
 import type { DefaultParams, LimitParam, PaginationParams, SortParams } from "@/types/params";
 import type { Registry } from "@/types/query/registry";
@@ -50,22 +51,16 @@ export abstract class BaseResourceClient {
     fetch: (offset: number) => Promise<ResourceResponse<TResource, TScopes>>,
     initialOffset = 0,
   ): ScopedResourceIterator<TResource, TScopes> {
-    let page = await fetch(initialOffset);
+    let offset = initialOffset;
 
     while (true) {
+      const page = await fetch(offset);
       yield* page.data;
 
-      if (!page.next) break;
+      const nextOffset = getNextOffset(page.next, offset);
+      if (nextOffset === null) break;
 
-      const offsetValue = new URL(page.next, "https://music.apple.com").searchParams.get("offset");
-
-      if (!offsetValue) break;
-
-      const offset = Number(offsetValue);
-
-      if (Number.isNaN(offset)) break;
-
-      page = await fetch(offset);
+      offset = nextOffset;
     }
   }
 }

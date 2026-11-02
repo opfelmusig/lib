@@ -6,6 +6,7 @@ import type { HeaderConfig } from "@/types/request";
 import type { Artwork } from "@/types/shared";
 
 export { ROOT_FOLDER_ID } from "@/clients/library/playlistFolder";
+export { getNextOffset } from "@/helpers/pagination";
 
 interface ImageOptions {
   width?: number;

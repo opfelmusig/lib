@@ -1,5 +1,5 @@
 import { ResourceClient } from "@/clients/resource";
-import { collect, defineScopes } from "@/helpers/public";
+import { collect, defineScopes, getNextOffset } from "@/helpers/public";
 import { RequestQueryBuilder } from "@/helpers/requestQuery";
 import type { ConfigParam, DefaultParams } from "@/types/params";
 import type { Registry } from "@/types/query/registry";
@@ -146,7 +146,8 @@ export class LibraryPlaylistFolderClient extends ResourceClient<typeof type, TRe
 
           const children = folder.relationships?.children;
 
-          if (!children?.next) return folder;
+          const nextOffset = getNextOffset(children?.next);
+          if (!children || nextOffset === null) return folder;
 
           const remainingChildren = await collect(
             this.iterate(
@@ -156,7 +157,7 @@ export class LibraryPlaylistFolderClient extends ResourceClient<typeof type, TRe
                   limit: playlistFolderTreeLimit,
                   offset,
                 }),
-              playlistFolderTreeLimit,
+              nextOffset,
             ),
             { signal: opts.config?.signal },
           );
